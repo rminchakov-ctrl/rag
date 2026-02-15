@@ -1,3 +1,7 @@
+import json
+import logging
+from datetime import datetime
+from typing import List, Dict, Any
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_community.vectorstores import FAISS
 from typing import List, Tuple
@@ -13,7 +17,80 @@ class RAGBot:
         self.vector_store = self.load_vector_store(index_path)
         self.llm_client = get_llm_client(model_path)
         self.security_enabled = True
+
+        self.setup_logging()
     
+    def setup_logging(self):
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(message)s',
+            handlers=[
+                logging.FileHandler('./logs/requests.log', encoding='utf-8'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger('RAGBot')
+    
+    def log_request(self, query: str, results: List, response: str, success: bool) -> Dict[str, Any]:
+        serializable_results = []
+        for doc, score in results:
+            serializable_results.append((doc, float(score)))  # Конвертируем score в float
+        
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'query': query,
+            'found_chunks': len(serializable_results) > 0,
+            'num_chunks_found': len(serializable_results),
+            'response_length': len(response),
+            'success': success,
+            'sources': [],
+            'top_chunk_score': float(serializable_results[0][1]) if serializable_results else 0.0,
+            'response_preview': response[:200] + '...' if len(response) > 200 else response
+        }
+        
+        for _, (doc, score) in enumerate(serializable_results[:3]):  #топ-3 источника
+            source_info = {
+                'source': doc.metadata.get('source', 'unknown'),
+                'score': float(score),  # Конвертируем в float
+                'chunk_preview': doc.page_content[:100] + '...' if len(doc.page_content) > 100 else doc.page_content
+            }
+            if 'page' in doc.metadata:
+                source_info['page'] = doc.metadata['page']
+            log_entry['sources'].append(source_info)
+        
+        self.logger.info(json.dumps(log_entry, ensure_ascii=False))
+    
+        return log_entry
+    def is_successful_response(self, response: str, results: List) -> bool:
+        # Критерии успешного ответа:
+        # 1. Ответ не пустой
+        # 2. Длина ответа больше минимальной
+        # 3. Найдены чанки (если это не общий вопрос)
+        # 4. Ответ не содержит сообщений об ошибках
+        
+        if not response or len(response.strip()) < 10:
+            return False
+        
+        error_indicators = [
+            "не найдены",
+            "not found", 
+            "ошибка",
+            "error",
+            "заблокировано",
+            "не удалось",
+            "не знаю",
+            "не могу"
+        ]
+        
+        response_lower = response.lower()
+        if any(indicator in response_lower for indicator in error_indicators):
+            return False
+        
+        if len(results) == 0 and not self.is_general_query(response):
+            return False
+        
+        return True
+
     def load_vector_store(self, index_path: str):
         try:
             return FAISS.load_local(
@@ -36,7 +113,7 @@ class RAGBot:
         
         examples = []
         
-        for i, query in enumerate(example_queries, 1):
+        for _, query in enumerate(example_queries, 1):
             if len(examples) >= n_examples:
                 break
                 
@@ -140,16 +217,22 @@ class RAGBot:
             return "Векторное хранилище не загружено."
         
         if self._is_malicious_content(query):
-            return "Заблокировано системой безопасности: подозрительный запрос"
+            response = "Заблокировано системой безопасности: подозрительный запрос"
+            self.log_request(query, [], response, False)
+            return response
 
         results = self.search_documents(query)        
         if not results:
-            return "Релевантные документы не найдены."
+            response = "Релевантные документы не найдены."
+            self.log_request(query, [], response, False)
+            return response
         
         safe_results = self._filter_malicious_chunks(results)
     
         if not safe_results:
-            return "Все документы заблокированы системой безопасности"
+            response = "Все документы заблокированы системой безопасности"
+            self.log_request(query, [], response, False)
+            return response
         
         prompt = self.generate_prompt(query, safe_results)
         
@@ -177,6 +260,9 @@ class RAGBot:
             if 'page' in doc.metadata:
                 response += f"  Страница: {doc.metadata['page']}\n"
             response += f"  Содержание: {doc.page_content[:200]}...\n\n"
+
+        success = self.is_successful_response(llm_response, results)
+        self.log_request(query, results, llm_response, success)    
         
         return response
     
@@ -241,8 +327,6 @@ class RAGBot:
         
         return "\n".join(context_lines)
     
-# Очистка пост
-
     def _sanitize_response(self, response: str) -> str:
         if not self.security_enabled:
             return response
@@ -259,8 +343,8 @@ class RAGBot:
         return '\n'.join(safe_lines)
 
 def main():
-    INDEX_SAVE_PATH = "./../Task3/faiss_index"
-    MODEL_PATH = "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+    INDEX_SAVE_PATH = "./faiss_index"
+    MODEL_PATH = "../Task4/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
     
     bot = RAGBot(INDEX_SAVE_PATH, MODEL_PATH)
     if not bot.vector_store:
