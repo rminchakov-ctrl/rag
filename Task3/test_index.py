@@ -1,8 +1,8 @@
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
 
-# MODEL_NAME = "BAAI/bge-m3"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+MODEL_NAME = "BAAI/bge-m3"
+#MODEL_NAME = "intfloat/multilingual-e5-large"
 INDEX_SAVE_PATH = "./faiss_index"
 
 # Загружаем модель эмбеддингов
@@ -19,7 +19,11 @@ vector_store = FAISS.load_local(
 )
 
 #query = "Моллари"
-query = "Поросенок Фунтик"
+#query = "Импрессионизм"
+#query = "Поросенок Фунтик"
+query = "Паровоз"
+#query = "Иван Грозный"
+#query = "Павлик Морозов"
 print(f"[INFO] Выполняется поиск по запросу: '{query}'")
 results = vector_store.similarity_search_with_score(f"научная фантастика: {query}", k=3)
 

@@ -11,8 +11,8 @@ from langchain.schema import Document
 DATA_PATH = "./../Task2/knowledge_base"
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
-# MODEL_NAME = "BAAI/bge-m3"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+MODEL_NAME = "BAAI/bge-m3"
+# MODEL_NAME = "intfloat/multilingual-e5-large"
 INDEX_SAVE_PATH = "./faiss_index"
 
 def extract_title(content):
