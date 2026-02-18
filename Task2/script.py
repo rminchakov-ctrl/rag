@@ -1,7 +1,5 @@
 import json
 import os
-import re
-from pathlib import Path
 
 def load_mapping(mapping_file):
     with open(mapping_file, 'r', encoding='utf-8') as f:

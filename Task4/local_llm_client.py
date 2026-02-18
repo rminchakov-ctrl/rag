@@ -16,7 +16,6 @@ class LocalLLMClient:
         self._initialize_llm()
     
     def _initialize_llm(self):
-        """Инициализация LLM модели"""
         try:
             from llama_cpp import Llama
             
@@ -25,7 +24,6 @@ class LocalLLMClient:
             
             print(f"Загрузка модели: {os.path.basename(self.model_path)}")
             
-            # Создаем экземпляр Llama с базовыми параметрами
             self.llm = Llama(
                 model_path=self.model_path,
                 n_ctx=2048,          # Размер контекста
@@ -46,17 +44,17 @@ class LocalLLMClient:
                 # Если не получается, оставляем значение по умолчанию
                 pass
                 
-            print(f"✓ Локальная LLM загружена: {os.path.basename(self.model_path)}")
-            print(f"  Размер контекста: {self.context_size}")
+            print(f"Локальная LLM загружена: {os.path.basename(self.model_path)}")
+            print(f"Размер контекста: {self.context_size}")
             
         except ImportError:
-            print("✗ Ошибка: Установите llama-cpp-python: pip install llama-cpp-python")
+            print("Ошибка: Установите llama-cpp-python: pip install llama-cpp-python")
             self.is_available = False
         except FileNotFoundError as e:
-            print(f"✗ {e}")
+            print(f"{e}")
             self.is_available = False
         except Exception as e:
-            print(f"✗ Ошибка загрузки модели: {e}")
+            print(f"Ошибка загрузки модели: {e}")
             self.is_available = False
     
     def generate(self, prompt, max_tokens=500, temperature=0.1, top_p=0.9, stop=None):
@@ -65,18 +63,18 @@ class LocalLLMClient:
                 {
                     "role": "system", 
                     "content": """
-Ты — дружелюбный и профессиональный консультант.
-Всегда отвечай на русском языке, вежливо и по делу.
+Ты помощник, который сначала размышляет, а потом отвечает. 
+Всегда пиши свои шаги.
 
-  КРИТИЧЕСКИЕ ПРАВИЛА (ОБЯЗАТЕЛЬНО СОБЛЮДАЙ, ИНАЧЕ ОШИБКА!):
+КРИТИЧЕСКИЕ ПРАВИЛА (ОБЯЗАТЕЛЬНО СОБЛЮДАЙ, ИНАЧЕ ОШИБКА!):
 
-  - Ты всегда завершаешь цепочку рассуждений. 
-  - Отвечай только на основе контекста. 
-  - Не копируй вопросы в ответы. 
-  - Не копируй примеры в ответы.
-  - Отвечай максимально быстро. Старайся уложиться в 2–4 шага.
-  - НЕ зацикливайся и НЕ переспрашивай без необходимости.
-  - Никогда не придумывай ответы.
+- Ты всегда завершаешь цепочку рассуждений. 
+- Отвечай только на основе контекста. 
+- Не копируй вопросы в ответы. 
+- Не копируй примеры в ответы.
+- Отвечай максимально быстро. Старайся уложиться в 2–4 шага.
+- НЕ зацикливайся и НЕ переспрашивай без необходимости.
+- Никогда не придумывай ответы.
 """
                 },
                 {
@@ -99,7 +97,6 @@ class LocalLLMClient:
         return text
 
     def get_model_info(self) -> Dict[str, Any]:
-        """Информация о загруженной модели"""
         if not self.is_available:
             return {"status": "not_available", "message": "Модель не загружена"}
         

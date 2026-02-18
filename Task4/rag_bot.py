@@ -1,6 +1,8 @@
+import logging
+
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-from langchain_community.vectorstores import FAISS
-from typing import List, Tuple
+from langchain_community.vectorstores.faiss import FAISS
+from typing import List, Dict, Any, Tuple
 from local_llm_client import get_llm_client
 
 class RAGBot:
@@ -13,7 +15,23 @@ class RAGBot:
         self.vector_store = self.load_vector_store(index_path)
         self.llm_client = get_llm_client(model_path)
         self.security_enabled = True
+
+        self.setup_logging()
     
+    def setup_logging(self):
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(message)s',
+            handlers=[
+                logging.FileHandler('./logs/requests.log', encoding='utf-8'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger('RAGBot')
+
+    def log(self, log_entry: Dict[str, Any]):
+        self.logger.info(log_entry)
+
     def load_vector_store(self, index_path: str):
         try:
             return FAISS.load_local(
@@ -36,7 +54,7 @@ class RAGBot:
         
         examples = []
         
-        for i, query in enumerate(example_queries, 1):
+        for _, query in enumerate(example_queries, 1):
             if len(examples) >= n_examples:
                 break
                 
@@ -54,7 +72,7 @@ class RAGBot:
                     example_text = self._format_example(query, doc.page_content)
                     examples.append(example_text)
                     
-            except Exception as e:
+            except Exception:
                 continue
         
         result = "\n\n".join(examples)
@@ -68,19 +86,15 @@ class RAGBot:
     def _is_valid_example(self, context_text: str, query: str) -> bool:
         if not context_text or not query:
             return False
-            
         # Базовая проверка: текст должен быть достаточно длинным
         if len(context_text.strip()) < 25:
-            return False
-            
+            return False            
         # Простая проверка на дублирование вопроса в ответе
         query_lower = query.lower()
-        context_lower = context_text.lower()
-        
+        context_lower = context_text.lower()        
         # Если ответ начинается с вопроса - плохой пример
         if context_lower.startswith(query_lower):
-            return False
-            
+            return False            
         # Если больше 50% слов вопроса есть в ответе - плохой пример
         query_words = set(query_lower.split())
         context_words = set(context_lower.split())
@@ -99,7 +113,7 @@ class RAGBot:
         similarity = SequenceMatcher(None, example_query.lower(), current_query.lower()).ratio()
         return similarity > 0.7
 
-    def search_documents(self, query: str, k: int = 3):
+    def search_documents(self, query: str, k: int = 3)  -> List[Tuple[Any, float]]:
         try:
             return self.vector_store.similarity_search_with_score(query, k=k)
         except:
@@ -118,21 +132,17 @@ class RAGBot:
         
         few_shot_examples = self.get_few_shot_examples(query)
         
-        prompt = f"""Ответь на вопрос используя предоставленные документы.
-    # ПРИМЕРЫ ДЛЯ ОБУЧЕНИЯ (не показывать в ответе)
-    {few_shot_examples}
-    # ТЕКУЩАЯ ЗАДАЧА
-    Контекст для анализа:
-    {context}
-    Вопрос: 
-    {query}
+        prompt = f"""
+# ПРИМЕРЫ ДЛЯ ОБУЧЕНИЯ - не показывать в ответе
+{few_shot_examples}
 
-    Ответь, следуя этим шагам:
-    1. Проанализируй вопрос
-    2. Используй информацию из документов  
-    3. Сформулируй четкий ответ
-
-    # ТВОЙ ОТВЕТ (только это показывать пользователю):"""
+Ответь на вопрос используя предоставленные документы.
+# ТЕКУЩАЯ ЗАДАЧА
+Контекст для анализа:
+{context}
+Вопрос: 
+{query}
+# ТВОЙ ОТВЕТ (только это показывать пользователю):"""
         return prompt
 
     def process_query(self, query: str):
@@ -145,13 +155,16 @@ class RAGBot:
         results = self.search_documents(query)        
         if not results:
             return "Релевантные документы не найдены."
-        
         safe_results = self._filter_malicious_chunks(results)
-    
         if not safe_results:
             return "Все документы заблокированы системой безопасности"
         
+        self.log({"query":query})
+        res = {f"doc{i}": doc for i, (doc, _) in enumerate(results)}
+        self.log({"results":res})
+        
         prompt = self.generate_prompt(query, safe_results)
+        self.log({"prompt": prompt})
         
         # Запрос к локальной LLM
         llm_response = self.llm_client.generate(
@@ -161,6 +174,7 @@ class RAGBot:
         )
 
         llm_response = self._sanitize_response(llm_response)
+        self.log({"llm_response": llm_response})
         
         response = f"Вопрос: {query}\n\n"
         response += f"Найдено документов: {len(results)}\n"
@@ -241,8 +255,6 @@ class RAGBot:
         
         return "\n".join(context_lines)
     
-# Очистка пост
-
     def _sanitize_response(self, response: str) -> str:
         if not self.security_enabled:
             return response

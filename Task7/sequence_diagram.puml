@@ -9,7 +9,6 @@ participant "СБ ответа" as security_resp
 participant "LLM Клиент" as llm
 participant "Лог" as logger
 
-
 == Успешный сценарий ==
 
 user -> bot: Запрос (query)
@@ -151,7 +150,7 @@ group Ошибка генерации ответа LLM
     activate logger
     logger --> bot: OK
     deactivate logger
-    
+
     bot --> user: "Ошибка генерации ответа: ..."
     deactivate bot
 end

@@ -1,10 +1,10 @@
 import json
 import logging
+
 from datetime import datetime
-from typing import List, Dict, Any
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-from langchain_community.vectorstores import FAISS
-from typing import List, Tuple
+from langchain_community.vectorstores.faiss import FAISS
+from typing import List, Dict, Any
 from local_llm_client import get_llm_client
 
 class RAGBot:
@@ -14,7 +14,7 @@ class RAGBot:
             model_kwargs={'device': 'cpu'},
             encode_kwargs={'normalize_embeddings': True}
         )
-        self.vector_store = self.load_vector_store(index_path)
+        self.vector_store = self._load_vector_store(index_path)
         self.llm_client = get_llm_client(model_path)
         self.security_enabled = True
 
@@ -31,7 +31,7 @@ class RAGBot:
         )
         self.logger = logging.getLogger('RAGBot')
     
-    def log_request(self, query: str, results: List, response: str, success: bool) -> Dict[str, Any]:
+    def log_request(self, query: str, results: List, response: str, success: bool):
         serializable_results = []
         for doc, score in results:
             serializable_results.append((doc, float(score)))  # Конвертируем score в float
@@ -59,9 +59,11 @@ class RAGBot:
             log_entry['sources'].append(source_info)
         
         self.logger.info(json.dumps(log_entry, ensure_ascii=False))
-    
-        return log_entry
-    def is_successful_response(self, response: str, results: List) -> bool:
+
+    def log(self, log_entry: Dict[str, Any]):
+        self.logger.info(log_entry)
+
+    def _is_successful_response(self, response: str, results: List) -> bool:
         # Критерии успешного ответа:
         # 1. Ответ не пустой
         # 2. Длина ответа больше минимальной
@@ -86,12 +88,12 @@ class RAGBot:
         if any(indicator in response_lower for indicator in error_indicators):
             return False
         
-        if len(results) == 0 and not self.is_general_query(response):
+        if len(results) == 0:
             return False
         
         return True
 
-    def load_vector_store(self, index_path: str):
+    def _load_vector_store(self, index_path: str):
         try:
             return FAISS.load_local(
                 index_path, 
@@ -104,7 +106,7 @@ class RAGBot:
             print(f"Ошибка загрузки векторного хранилища: {e}")
             return None
     
-    def get_few_shot_examples(self, current_query: str, n_examples: int = 2) -> str:
+    def _get_few_shot_examples(self, current_query: str, n_examples: int = 2) -> str:
         example_queries = [
             "кто такая Иванова",
             "планета Вода", 
@@ -121,7 +123,7 @@ class RAGBot:
                 continue
                 
             try:
-                results = self.search_documents(query, k=1)
+                results = self._search_documents(query, k=1)
                 
                 if not results:
                     continue
@@ -176,40 +178,35 @@ class RAGBot:
         similarity = SequenceMatcher(None, example_query.lower(), current_query.lower()).ratio()
         return similarity > 0.7
 
-    def search_documents(self, query: str, k: int = 3):
+    def _search_documents(self, query: str, k: int = 3):
         try:
-            return self.vector_store.similarity_search_with_score(query, k=k)
+            results = self.vector_store.similarity_search_with_score(query, k=k)
         except:
-            results = self.vector_store.similarity_search(query, k=k)
-            return [(doc, 1.0) for doc in results]
+            resp = self.vector_store.similarity_search(query, k=k)
+            results = [(doc, 1.0) for doc in resp]
+        self.log_request(query, results, "", True)
+        return results
     
-    def generate_prompt(self, query: str, results: List) -> str:
-        """
-        context = ""
-        for i, (doc, score) in enumerate(results, 1):
-            context += f"Документ {i} (релевантность {score:.3f}):\n{doc.page_content}\n\n"
-        """
-
-        filtered_results = self._filter_malicious_chunks(results)
-        context = self._format_context(filtered_results)
+    def _generate_prompt(self, query: str, results: List) -> str:
+        context = self._format_context(results)                
+        few_shot_examples = self._get_few_shot_examples(query)
+        security_instructions = self._get_security_instructions()
         
-        few_shot_examples = self.get_few_shot_examples(query)
-        
-        prompt = f"""Ответь на вопрос используя предоставленные документы.
-    # ПРИМЕРЫ ДЛЯ ОБУЧЕНИЯ (не показывать в ответе)
-    {few_shot_examples}
-    # ТЕКУЩАЯ ЗАДАЧА
-    Контекст для анализа:
-    {context}
-    Вопрос: 
-    {query}
+        prompt = f"""
+{security_instructions}
+Ответь на вопрос используя только предоставленные документы!
+Если документов нет - скажи что нет документов!
+Не придумывай ответы!
+# ПРИМЕРЫ ДЛЯ ОБУЧЕНИЯ (не показывать в ответе)
+{few_shot_examples}
+# ТЕКУЩАЯ ЗАДАЧА
+Контекст для анализа:
+{context}
+Вопрос: 
+{query}
+# ТВОЙ ОТВЕТ - только это показывать пользователю!:"""
+        self.log(prompt)
 
-    Ответь, следуя этим шагам:
-    1. Проанализируй вопрос
-    2. Используй информацию из документов  
-    3. Сформулируй четкий ответ
-
-    # ТВОЙ ОТВЕТ (только это показывать пользователю):"""
         return prompt
 
     def process_query(self, query: str):
@@ -221,20 +218,20 @@ class RAGBot:
             self.log_request(query, [], response, False)
             return response
 
-        results = self.search_documents(query)        
+        results = self._search_documents(query)
+        results = self._clean_results(results)
         if not results:
             response = "Релевантные документы не найдены."
             self.log_request(query, [], response, False)
             return response
         
-        safe_results = self._filter_malicious_chunks(results)
-    
-        if not safe_results:
+        results = self._filter_malicious_chunks(results)
+        if not results:
             response = "Все документы заблокированы системой безопасности"
             self.log_request(query, [], response, False)
             return response
         
-        prompt = self.generate_prompt(query, safe_results)
+        prompt = self._generate_prompt(query, results)
         
         # Запрос к локальной LLM
         llm_response = self.llm_client.generate(
@@ -261,8 +258,8 @@ class RAGBot:
                 response += f"  Страница: {doc.metadata['page']}\n"
             response += f"  Содержание: {doc.page_content[:200]}...\n\n"
 
-        success = self.is_successful_response(llm_response, results)
-        self.log_request(query, results, llm_response, success)    
+        success = self._is_successful_response(llm_response, results)
+        self.log_request(query, results, llm_response, success)
         
         return response
     
@@ -271,7 +268,7 @@ class RAGBot:
             return results
             
         safe_results = []
-        for doc, score in results:
+        for doc, score in results:            
             if not self._is_malicious_content(doc.page_content):
                 safe_results.append((doc, score))
         
@@ -303,6 +300,14 @@ class RAGBot:
         
         text_lower = text.lower()
         return any(flag in text_lower for flag in red_flags)
+    
+    def _clean_results(self, results: List) -> List:
+        clean_results = []
+        for _, (doc, score) in enumerate(results, 1):
+            if score < 1.5:
+                continue
+            clean_results.append((doc, score))
+        return clean_results    
     
     def _get_security_instructions(self) -> str:
         """Системные инструкции безопасности"""

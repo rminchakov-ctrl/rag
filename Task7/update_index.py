@@ -2,13 +2,13 @@ import os
 import json
 import logging
 import hashlib
+
 from datetime import datetime
 from pathlib import Path
-
-from langchain.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.vectorstores.faiss import FAISS
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 
 CONFIG = {
     "data_path": "./knowledge_base",
@@ -17,7 +17,7 @@ CONFIG = {
     "log_file": "./logs/update_index.log",
     "chunk_size": 1000,
     "chunk_overlap": 100,
-    "model_name": "BAAI/bge-m3",
+    "model_name": "intfloat/multilingual-e5-large",
     "supported_extensions": [".txt", ".md", ".text"]
 }
 
@@ -159,8 +159,7 @@ def update_index():
             logger.info("Загрузка существующего индекса...")
             vector_store = FAISS.load_local(
                 CONFIG["index_save_path"], 
-                embeddings, 
-                allow_dangerous_deserialization=True
+                embeddings
             )
             logger.info("Добавление новых документов в индекс...")
             vector_store.add_documents(chunks)

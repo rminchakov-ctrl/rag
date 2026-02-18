@@ -1,8 +1,9 @@
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores.faiss import FAISS
 
-MODEL_NAME = "BAAI/bge-m3"
-INDEX_SAVE_PATH = "faiss_index"
+# MODEL_NAME = "BAAI/bge-m3"
+MODEL_NAME = "intfloat/multilingual-e5-large"
+INDEX_SAVE_PATH = "./faiss_index"
 
 # Загружаем модель эмбеддингов
 embeddings = HuggingFaceBgeEmbeddings(
@@ -12,27 +13,20 @@ embeddings = HuggingFaceBgeEmbeddings(
 )
 
 print("[INFO] Загрузка индекса...")
-try:
-    # Пробуем загрузить с параметром (для новых версий)
-    vector_store = FAISS.load_local(
-        INDEX_SAVE_PATH,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-except TypeError:
-    print("[INFO] Попытка загрузки без allow_dangerous_deserialization...")
-    vector_store = FAISS.load_local(
-        INDEX_SAVE_PATH,
-        embeddings
-    )
+vector_store = FAISS.load_local(
+    INDEX_SAVE_PATH,
+    embeddings
+)
 
-query = "Расскажи про Моллари"
+#query = "Моллари"
+query = "Поросенок Фунтик"
 print(f"[INFO] Выполняется поиск по запросу: '{query}'")
-results = vector_store.similarity_search(query, k=3)
+results = vector_store.similarity_search_with_score(f"научная фантастика: {query}", k=3)
 
 print(f"\n[RESULTS] Найдено {len(results)} наиболее релевантных чанка:")
-for i, doc in enumerate(results):
+for i, (doc, score) in enumerate(results):
     print(f"\n--- Результат #{i+1} ---")
     print(f"Текст: {doc.page_content[:200]}...")
+    print(f"Релевантность: {score:.6f}")
     print(f"Источник: {doc.metadata.get('source')}")
     print(f"ID чанка: {doc.metadata.get('chunk_id', 'N/A')}")

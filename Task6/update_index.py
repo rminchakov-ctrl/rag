@@ -5,10 +5,10 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 
-from langchain.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores.faiss import FAISS
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 
 CONFIG = {
     "data_path": "./../Task2/knowledge_base",
