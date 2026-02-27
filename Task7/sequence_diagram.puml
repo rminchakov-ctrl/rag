@@ -1,158 +1,45 @@
-@startuml request_processing
+@startuml RAGBot
 title Sequence Diagram: Обработка запроса в RAGBot
 
-actor User as user
-participant "RAGBot" as bot
-participant "СБ запроса" as security_req
-participant "Векторный индекс" as index
-participant "СБ ответа" as security_resp
-participant "LLM Клиент" as llm
-participant "Лог" as logger
+actor User
+participant "RAGBot" as Bot
+participant "Векторная БД" as VectorDB
+participant "LLM Модель" as LLM
+participant "Система логирования" as Logger
 
-== Успешный сценарий ==
+User -> Bot: Запрос
+activate Bot
 
-user -> bot: Запрос (query)
-activate bot
-
-bot -> security_req: Проверка запроса\n_is_malicious_content(query)
-activate security_req
-security_req --> bot: OK (false)
-deactivate security_req
-
-bot -> index: Поиск похожих чанков\nsimilarity_search(query)
-activate index
-index --> bot: Список результатов [(doc, score), ...]
-deactivate index
-
-bot -> security_resp: Фильтрация чанков\n_filter_malicious_chunks(results)
-activate security_resp
-security_resp --> bot: Безопасные результаты
-deactivate security_resp
-
-bot -> bot: Формирование промпта\ngenerate_prompt(query, results)
-
-bot -> llm: Генерация ответа\ngenerate(prompt, max_tokens)
-activate llm
-llm --> bot: Ответ LLM (llm_response)
-deactivate llm
-
-bot -> security_resp: Санитизация ответа\n_sanitize_response(response)
-activate security_resp
-security_resp --> bot: Очищенный ответ
-deactivate security_resp
-
-bot -> logger: Логирование успеха\nlog_request(query, results, response, true)
-activate logger
-logger --> bot: OK
-deactivate logger
-
-bot --> user: Ответ (response)
-deactivate bot
-
-== Сценарии отказа ==
-
-group Заблокировано системой безопасности (на запросе)
-    user -> bot: Запрос (query)
-    activate bot
-
-    bot -> security_req: Проверка запроса\n_is_malicious_content(query)
-    activate security_req
-    security_req --> bot: BLOCKED (true)
-    deactivate security_req
-
-    bot -> logger: Логирование блокировки\nlog_request(query, [], "Заблокировано", false)
-    activate logger
-    logger --> bot: OK
-    deactivate logger
-
-    bot --> user: "Заблокировано системой безопасности"
-    deactivate bot
+Bot -> Bot: проверка безопасности запроса
+break Нет результатов
+    Bot -> Logger: Заблокировано системой безопасности: подозрительный запрос
+    Bot --> User: Заблокировано системой безопасности: подозрительный запрос
 end
 
-group Пустой индекс / Не найдены чанки
-    user -> bot: Запрос (query)
-    activate bot
+Bot -> VectorDB: Поиск релевантных чанков
+activate VectorDB
+VectorDB --> Bot: Список результатов
+deactivate VectorDB
 
-    bot -> security_req: Проверка запроса\n_is_malicious_content(query)
-    activate security_req
-    security_req --> bot: OK (false)
-    deactivate security_req
-
-    bot -> index: Поиск похожих чанков\nsimilarity_search(query)
-    activate index
-    index --> bot: Пустой список []
-    deactivate index
-
-    bot -> logger: Логирование: чанки не найдены\nlog_request(query, [], "Не найдены", false)
-    activate logger
-    logger --> bot: OK
-    deactivate logger
-
-    bot --> user: "Релевантные документы не найдены."
-    deactivate bot
+Bot -> Bot: очистка ответа\n(в том числе безопасности)
+break Нет результатов
+    Bot -> Logger: Логирование: "Нет результатов"
+    Bot --> User: "Информация не найдена"
 end
 
-group Все чанки заблокированы системой безопасности
-    user -> bot: Запрос (query)
-    activate bot
+Bot -> Bot: обогащение контекста инструкциями
+Bot -> LLM: Генерация ответа на основе контекста
+activate LLM
+LLM -> LLM: обогащение контекста инструкциями
+LLM --> Bot: Сгенерированный ответ
 
-    bot -> security_req: Проверка запроса\n_is_malicious_content(query)
-    activate security_req
-    security_req --> bot: OK (false)
-    deactivate security_req
-
-    bot -> index: Поиск похожих чанков\nsimilarity_search(query)
-    activate index
-    index --> bot: Список результатов [(doc, score), ...]
-    deactivate index
-
-    bot -> security_resp: Фильтрация чанков\n_filter_malicious_chunks(results)
-    activate security_resp
-    security_resp --> bot: Пустой список []
-    deactivate security_resp
-
-    bot -> logger: Логирование: все чанки заблокированы\nlog_request(query, results, "Заблокировано", false)
-    activate logger
-    logger --> bot: OK
-    deactivate logger
-
-    bot --> user: "Все документы заблокированы системой безопасности"
-    deactivate bot
+Bot -> Bot: очистка ответа\n(в том числе безопасности)
+break Пустой очищенный ответ LLM
+    Bot -> Logger: Логирование: "Нет результатов"
+    Bot --> User: "Информация не найдена"
 end
 
-group Ошибка генерации ответа LLM
-    user -> bot: Запрос (query)
-    activate bot
-    
-    bot -> security_req: Проверка запроса\n_is_malicious_content(query)
-    activate security_req
-    security_req --> bot: OK (false)
-    deactivate security_req
-
-    bot -> index: Поиск похожих чанков\nsimilarity_search(query)
-    activate index
-    index --> bot: Список результатов [(doc, score), ...]
-    deactivate index
-
-    bot -> security_resp: Фильтрация чанков\n_filter_malicious_chunks(results)
-    activate security_resp
-    security_resp --> bot: Безопасные результаты
-    deactivate security_resp
-
-    bot -> bot: Формирование промпта\ngenerate_prompt(query, results)
-        
-    bot -> llm: Генерация ответа\ngenerate(prompt, max_tokens)
-    activate llm
-    llm --> bot: Исключение (Exception)
-    deactivate llm
-
-    bot -> logger: Логирование ошибки LLM\nlog_request(query, results, "Ошибка", false)
-    activate logger
-    logger --> bot: OK
-    deactivate logger
-
-    bot --> user: "Ошибка генерации ответа: ..."
-    deactivate bot
-end
+Bot -> Logger: Логирование запроса и результатов
+Bot --> User: Ответ
 
 @enduml

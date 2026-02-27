@@ -17,8 +17,8 @@ CONFIG = {
     "log_file": "./logs/update_index.log",
     "chunk_size": 1000,
     "chunk_overlap": 100,
-    "model_name": "intfloat/multilingual-e5-large",
-    "supported_extensions": [".txt", ".md", ".text"]
+    "model_name": "BAAI/bge-m3",
+    "supported_extensions": [".txt", ".md"]
 }
 
 def setup_logging():
@@ -44,6 +44,18 @@ def compute_file_hash(file_path):
     except Exception as e:
         logger.error(f"Ошибка вычисления хеша для {file_path}: {e}")
         return None
+
+def is_index_exists():
+    """Проверяет, существует ли индекс"""
+    index_path = CONFIG["index_save_path"]
+    if not os.path.exists(index_path):
+        return False
+    
+    required_files = ['index.faiss', 'index.pkl']
+    for file in required_files:
+        if not os.path.exists(os.path.join(index_path, file)):
+            return False
+    return True
 
 def load_manifest():
     if os.path.exists(CONFIG["manifest_file"]):
@@ -152,25 +164,57 @@ def update_index():
         embeddings = HuggingFaceBgeEmbeddings(
             model_name=CONFIG["model_name"],
             model_kwargs={'device': 'cpu'},
-            encode_kwargs={'normalize_embeddings': True}
+            encode_kwargs={'normalize_embeddings': True}            
         )
-        
-        if os.path.exists(CONFIG["index_save_path"]):
+
+        # Проверяем, существует ли индекс
+        if is_index_exists():
             logger.info("Загрузка существующего индекса...")
-            vector_store = FAISS.load_local(
-                CONFIG["index_save_path"], 
-                embeddings
-            )
-            logger.info("Добавление новых документов в индекс...")
-            vector_store.add_documents(chunks)
+            try:
+                vector_store = FAISS.load_local(
+                    CONFIG["index_save_path"], 
+                    embeddings,
+                    allow_dangerous_deserialization=True
+                )
+                logger.info("Существующий индекс загружен успешно")
+            except Exception as e:
+                logger.warning(f"Не удалось загрузить существующий индекс: {e}")
+                logger.info("Создание нового индекса...")
+                vector_store = None
         else:
-            logger.info("Создание нового индекса...")
-            vector_store = FAISS.from_documents(chunks, embeddings)
+            logger.info("Индекс не существует, будет создан новый")
+            vector_store = None
         
+        # Если есть новые файлы, обрабатываем их
+        if new_files:
+            logger.info(f"Найдено новых/измененных файлов: {len(new_files)}")
+            documents = load_documents(new_files)
+            
+            if not documents:
+                logger.warning("Не удалось загрузить документы из новых файлов")
+                return False
+            
+            chunks = split_documents(documents)
+            
+            if vector_store:
+                logger.info("Добавление новых документов в индекс...")
+                vector_store.add_documents(chunks)
+            else:
+                logger.info("Создание нового индекса...")
+                vector_store = FAISS.from_documents(chunks, embeddings)
+            
+            # Сохраняем манифест после успешной обработки
+            save_manifest(manifest)
+        else:
+            logger.info("Новых или измененных файлов не обнаружено.")
+            if not vector_store:
+                logger.error("Индекс не существует и новых файлов нет. Нечего обновлять.")
+                return False
+        
+        # Сохраняем индекс в любом случае (обновляем метаданные)
         logger.info(f"Сохранение индекса в '{CONFIG['index_save_path']}'...")
+        os.makedirs(CONFIG["index_save_path"], exist_ok=True)
         vector_store.save_local(CONFIG["index_save_path"])
-        
-        save_manifest(manifest)
         
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
@@ -178,8 +222,8 @@ def update_index():
         logger.info(f"ОБНОВЛЕНИЕ ЗАВЕРШЕНО УСПЕШНО")
         logger.info(f"Время выполнения: {duration:.2f} секунд")
         logger.info(f"Обработано файлов: {len(new_files)}")
-        logger.info(f"Добавлено чанков: {len(chunks)}")
-        logger.info(f"Общий размер индекса: {vector_store.index.ntotal} векторов")
+        if vector_store:
+            logger.info(f"Общий размер индекса: {vector_store.index.ntotal} векторов")
         
         return True
         
