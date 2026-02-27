@@ -1,0 +1,142 @@
+[
+  {
+    "timestamp": "2026-02-26T20:12:50.373860",
+    "question": "Кто такой Моллари?",
+    "category": "персонажи",
+    "expected_answer": true,
+    "response_text": "Вопрос: Кто такой Моллари?\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nМоллари (Fred) Моллари - управляющий станцией «Громко», колоссальной мобильной строительной платформой, контролирующей строительство космических станций. После того случая, когда он был обвинён в терроризме, он искал утешения и раскаяния, работая над тем, чтобы улучшить жизнь всех астероидян в системе.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.056):\n  Источник: knowledge_base/Джонсон.md\n  Документ 2 (relevance: 1.234):\n  Источник: knowledge_base/СВП.md\n  Документ 3 (relevance: 1.240):\n  Источник: knowledge_base/Сезон2.md\n",
+    "response_length": 719,
+    "response_found": true,
+    "is_correct": true
+  },
+  {
+    "timestamp": "2026-02-26T20:12:56.658154",
+    "question": "Расскажи про Шеридана",
+    "category": "персонажи",
+    "expected_answer": true,
+    "response_text": "Вопрос: Расскажи про Шеридана\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nШеридан, капитан корабля \"Буцефал\", родился на Земле в период между 30 ДВТ и 21 ДВТ. Он родился в семье, которая жила на Земле, но был отстранен из-за непрерывной службы. После уничтожения корабля \"Ведьма\" Шеридан вместе с Шедом Гарви, Наоми Нагатой, Эймосом Локлиом, Петром Камалем и Петром Камалем отправился на поиски истинного виновника случившегося. Шеридан был признан несомненным лидером и капитаном для своих товарищей.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.122):\n  Источник: knowledge_base/Холден.md\n  Документ 2 (relevance: 1.182):\n  Источник: knowledge_base/Холден.md\n  Документ 3 (relevance: 1.193):\n  Источник: knowledge_base/Статья1.md\n",
+    "response_length": 849,
+    "response_found": true,
+    "is_correct": true
+  },
+  {
+    "timestamp": "2026-02-26T20:13:04.976600",
+    "question": "Что такое Протомолекула?",
+    "category": "концепты",
+    "expected_answer": true,
+    "response_text": "Вопрос: Что такое Протомолекула?\n\nНайдено документов: 2\nОтвет LLM:\n============================================================\nProtomolekul (Protomolekul) - это небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, небольшое, не\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.027):\n  Источник: knowledge_base/Статья1.md\n  Документ 2 (relevance: 1.087):\n  Источник: knowledge_base/Места.md\n",
+    "response_length": 1237,
+    "response_found": true,
+    "is_correct": true
+  },
+  {
+    "timestamp": "2026-02-26T20:13:07.668318",
+    "question": "Опиши корабль Буцефал",
+    "category": "технологии",
+    "expected_answer": true,
+    "response_text": "Вопрос: Опиши корабль Буцефал\n\nНайдено документов: 2\nОтвет LLM:\n============================================================\n1. Отвечай только на основе предоставленной информации.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.056):\n  Источник: knowledge_base/Роси.md\n  Документ 2 (relevance: 1.058):\n  Источник: knowledge_base/СВП.md\n",
+    "response_length": 401,
+    "response_found": true,
+    "is_correct": true
+  },
+  {
+    "timestamp": "2026-02-26T20:13:11.163852",
+    "question": "Что такое Ремень?",
+    "category": "локации",
+    "expected_answer": true,
+    "response_text": "Релевантные документы не найдены.",
+    "response_length": 33,
+    "response_found": false,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:11.230953",
+    "question": "Где находится станция Громко?",
+    "category": "локации",
+    "expected_answer": true,
+    "response_text": "Релевантные документы не найдены.",
+    "response_length": 33,
+    "response_found": false,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:17.481132",
+    "question": "Кто такие ОПА?",
+    "category": "организации",
+    "expected_answer": true,
+    "response_text": "Вопрос: Кто такие ОПА?\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nОтвет: ОПА (Outer Planet Alliance) - это политическая сила, объединяющая жителей Ременья и других планет, которые не являются частью Союза Внешних Планет (CVEP) или Альянса Внешних Планет (AVP). ОПА является одной из трёх основных современных политических сил в мире The Expanse, и она описывается как общественно-политическое движение за независимость Ременья от внутренних планет и самоуправления, согласно самому ОПА, либо как террористическая сеть, согласно официальной позиции властей внутренних планет.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.082):\n  Источник: knowledge_base/СВП.md\n  Документ 2 (relevance: 1.168):\n  Источник: knowledge_base/СВП.md\n  Документ 3 (relevance: 1.268):\n  Источник: knowledge_base/Наву.md\n",
+    "response_length": 914,
+    "response_found": true,
+    "is_correct": true
+  },
+  {
+    "timestamp": "2026-02-26T20:13:21.336977",
+    "question": "Кто такая Иванова?",
+    "category": "удаленные_персонажи",
+    "expected_answer": true,
+    "response_text": "Релевантные документы не найдены.",
+    "response_length": 33,
+    "response_found": false,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:25.382132",
+    "question": "Расскажи про Леньера",
+    "category": "удаленные_персонажи",
+    "expected_answer": true,
+    "response_text": "Релевантные документы не найдены.",
+    "response_length": 33,
+    "response_found": false,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:33.470482",
+    "question": "Что такое двигатель Эпштейна",
+    "category": "удаленные_технологии",
+    "expected_answer": false,
+    "response_text": "Вопрос: Что такое двигатель Эпштейна\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nДокumenты 1 и 2 (релевантность 1.292) и 3 (релевантность 1.347) являются документами, посвященными строительству и эксплуатации корневых жителей Ременьа. Они рассказывают о том, как строительство и обслуживание флоты корневых жителей Ременьа происходит на станции Громко. Они также описывают, как Эймус, который является одним из главных персонажей, помогает Прексу найти свою дочь и не даёт ему поддавшись жестокой мести, когда он и Шеридан чуть не убили друг друга из-за их разногласий. Они также показывают, как Эймус помогает Прексу развивать свой способность относиться к другим, и позволяет себе образование связей с ними.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.292):\n  Источник: knowledge_base/Тихо.md\n  Документ 2 (relevance: 1.328):\n  Источник: knowledge_base/Бартон.md\n  Документ 3 (relevance: 1.347):\n  Источник: knowledge_base/Факты.md\n",
+    "response_length": 1053,
+    "response_found": true,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:38.126321",
+    "question": "Кто такой Xarn Velgor?",
+    "category": "удаленные_сущности",
+    "expected_answer": false,
+    "response_text": "Вопрос: Кто такой Xarn Velgor?\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nXarn Velgor (Xarn Velgor) es un personaje ficticio de la serie de televisión de ciencia ficción \"Doctor Who\". Xarn es un astrólogo y científico del siglo XXI, que se encuentra en el pasado de la serie y se encuentra involucrado en la investigación de la nave espacial \"TARDIS\". Xarn es un personaje que aparece en la temporada 11 de la serie, y su nombre significa \"Velgor\" en el idioma galés.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.319):\n  Источник: knowledge_base/СВП.md\n  Документ 2 (relevance: 1.329):\n  Источник: knowledge_base/Холден.md\n  Документ 3 (relevance: 1.352):\n  Источник: knowledge_base/Эшфорд.md\n",
+    "response_length": 812,
+    "response_found": true,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:42.520833",
+    "question": "Что такое Synth Flux?",
+    "category": "удаленные_концепты",
+    "expected_answer": false,
+    "response_text": "Вопрос: Что такое Synth Flux?\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nSynth Flux es una tecnología desarrollada por una empresa privada para la producción de combustible de alta calidad. La tecnología utiliza una combinación de procesos de combustión y procesos de reacción para producir combustible de alta calidad, que es más eficaz y más ecoeficiente que los combustibles de base. La empresa ha desarrollado una serie de tecnologías para la producción de combustible de alta calidad, incluyendo la Synth Flux, que ofrece una mayor flexibilidad y flexibilidad en la producción de combustible de alta calidad. La Synth Flux es una tecnología innovadora y está siendo utilizada por varios clientes de alto nivel en todo el mundo.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.320):\n  Источник: knowledge_base/Статья1.md\n  Документ 2 (relevance: 1.331):\n  Источник: knowledge_base/Тихо.md\n  Документ 3 (relevance: 1.337):\n  Источник: knowledge_base/Факты.md\n",
+    "response_length": 1078,
+    "response_found": true,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:47.446396",
+    "question": "Опиши планету VoidCore",
+    "category": "удаленные_локации",
+    "expected_answer": false,
+    "response_text": "Вопрос: Опиши планету VoidCore\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nВажным для успешного выполнения задания является ответ на вопрос, какие конфликты возникают в будущем, и как они могут повлиять на развитие планет.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.151):\n  Источник: knowledge_base/Илус.md\n  Документ 2 (relevance: 1.173):\n  Источник: knowledge_base/Статья1.md\n  Документ 3 (relevance: 1.214):\n  Источник: knowledge_base/Илус.md\n",
+    "response_length": 566,
+    "response_found": true,
+    "is_correct": false
+  },
+  {
+    "timestamp": "2026-02-26T20:13:52.216500",
+    "question": "Как работает двигатель на Dark Matter?",
+    "category": "удаленные_технологии",
+    "expected_answer": false,
+    "response_text": "Вопрос: Как работает двигатель на Dark Matter?\n\nНайдено документов: 3\nОтвет LLM:\n============================================================\nДля работы двигателя на Dark Matter необходимо использовать специальный герметик, который состоит из двух частей: первой части - гермет, которая содержит механические элементы, а вторая - электрический блок, который управляет работой двигателя.\n============================================================\n\nИсточники информации:\n\n  Документ 1 (relevance: 1.148):\n  Источник: knowledge_base/Тихо.md\n  Документ 2 (relevance: 1.151):\n  Источник: knowledge_base/Бартон.md\n  Документ 3 (relevance: 1.171):\n  Источник: knowledge_base/Факты.md\n",
+    "response_length": 679,
+    "response_found": true,
+    "is_correct": false
+  }
+]

@@ -1,0 +1,46 @@
+@startuml update_index
+title Архитектура системы обновления векторного индекса
+
+package "Данные" {
+  [Локальная папка] as data_folder
+  [Манифест файлов] as manifest
+}
+
+package "Обработка" {
+  [Скрипт обновления] as updater
+  [Загрузчик документов] as loader
+  [Сплиттер текста] as splitter
+  [Модель эмбеддингов] as embeddings
+  [Индекс FAISS] as index
+}
+
+package "Логи" {
+  [Логи процесса] as process_log
+  [Логи cron] as cron_log
+}
+
+[Планировщик Cron] as cron
+
+data_folder --> loader
+manifest --> updater
+
+updater --> loader
+loader --> splitter
+splitter --> embeddings
+embeddings --> index
+
+updater --> index
+updater --> manifest
+
+updater --> process_log
+cron --> cron_log
+
+cron --> updater
+
+note right of updater
+Отслеживает изменения
+Обновляет индекс
+Логирует статистику
+end note
+
+@enduml

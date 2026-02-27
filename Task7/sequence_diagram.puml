@@ -1,0 +1,45 @@
+@startuml RAGBot
+title Sequence Diagram: Обработка запроса в RAGBot
+
+actor User
+participant "RAGBot" as Bot
+participant "Векторная БД" as VectorDB
+participant "LLM Модель" as LLM
+participant "Система логирования" as Logger
+
+User -> Bot: Запрос
+activate Bot
+
+Bot -> Bot: проверка безопасности запроса
+break Нет результатов
+    Bot -> Logger: Заблокировано системой безопасности: подозрительный запрос
+    Bot --> User: Заблокировано системой безопасности: подозрительный запрос
+end
+
+Bot -> VectorDB: Поиск релевантных чанков
+activate VectorDB
+VectorDB --> Bot: Список результатов
+deactivate VectorDB
+
+Bot -> Bot: очистка ответа\n(в том числе безопасности)
+break Нет результатов
+    Bot -> Logger: Логирование: "Нет результатов"
+    Bot --> User: "Информация не найдена"
+end
+
+Bot -> Bot: обогащение контекста инструкциями
+Bot -> LLM: Генерация ответа на основе контекста
+activate LLM
+LLM -> LLM: обогащение контекста инструкциями
+LLM --> Bot: Сгенерированный ответ
+
+Bot -> Bot: очистка ответа\n(в том числе безопасности)
+break Пустой очищенный ответ LLM
+    Bot -> Logger: Логирование: "Нет результатов"
+    Bot --> User: "Информация не найдена"
+end
+
+Bot -> Logger: Логирование запроса и результатов
+Bot --> User: Ответ
+
+@enduml
